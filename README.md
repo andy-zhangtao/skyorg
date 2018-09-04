@@ -11,9 +11,9 @@ Connect public network and private network
                                                            |
                                                            | Tcp Socket B
                                                           \|/
-	                                              |-----------------|
-	                                              |  local server   |
-	                                              |-----------------|
+                                                  |-----------------|
+                                                  |  local server   |
+                                                  |-----------------|
 ```
 
 SkyServer will manager a tcp socket pool. When SkyClient connect SkyServer, they will create N(10 as default) tcp connect.
@@ -45,17 +45,17 @@ Three connections as shown in the following figure:
                      |-------------------------|
 ---Request --------->| skyServer(0.0.0.0:33333)|------------
                      |-------------------------|           |Control Connection (0.0.0.0:33335)
-	                            |                          |
-	                            |Message Connection        |
-	                            |                          |
+	                            |                      |
+	                            |Message Connection    |
+	                            |                      |
                      |-------------------------|           |
-	                 | skyClient(0.0.0.0:33334)| <---------|
-	                 |-------------------------|
-	                 	        |
-	                 	        |Proxy Connection
-	                 |-------------------------|
-	                 |      Local Server       |
-	                 |-------------------------|
+                     | skyClient(0.0.0.0:33334)| <---------|
+                     |-------------------------|
+	                            |
+	                            |Proxy Connection
+                     |-------------------------|
+                     |      Local Server       |
+                     |-------------------------|
 ```        
 
 So skyServer will host three ports:
