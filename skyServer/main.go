@@ -27,6 +27,10 @@ type ProxyConn struct {
 
 func main() {
 	app := cli.NewApp()
+	app.Author = "Andy Zhang"
+	app.Version = "v0.1.0"
+	app.Name = "SkyServer"
+	app.Email = "ztao@gmail.com"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "host",
@@ -94,6 +98,7 @@ func start(host, port string) error {
 			}
 		}
 	}()
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -108,6 +113,7 @@ func start(host, port string) error {
 			conn.Close()
 			continue
 		}
+
 		go proxyToClient(ProxyConn{
 			Id:   id,
 			Conn: c,
@@ -118,7 +124,12 @@ func start(host, port string) error {
 }
 
 func proxyToClient(pc ProxyConn, src net.Conn, clientOffLine chan int) {
-	fmt.Printf("Received message %s -> %s Get Idle Conn [%v] \n", src.RemoteAddr(), src.LocalAddr(), pc.Id)
+	defer func() {
+		src.Close()
+		(*pc.Conn).Close()
+	}()
+
+	fmt.Printf("New request from [%s] to [%s] Use Idle Conn [%d] \n", src.RemoteAddr(), src.LocalAddr(), pc.Id)
 
 	errMsg := make(chan bool)
 	go tools.HandleRequest(src, *pc.Conn, errMsg)
@@ -145,6 +156,8 @@ func createChanForClient(host, port string) (*net.Conn, error) {
 		os.Exit(1)
 	}
 
+	log.Printf("Listen Message Conn [%s] \n", laddr.String())
+
 	l, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
 		fmt.Println("Error listening:", err)
@@ -160,7 +173,7 @@ func createChanForClient(host, port string) (*net.Conn, error) {
 		}
 
 		pools.AddConn(conn)
-		fmt.Printf("New Client Online %v  Cap %d \n", conn.LocalAddr(), pools.Cap())
+		log.Printf("New Client Online [%v] Pool Cap [%d] \n", conn.LocalAddr(), pools.Cap())
 	}
 
 	return nil, nil
@@ -180,6 +193,8 @@ func createControlConn(host, port string, controlChan chan int) {
 		os.Exit(1)
 	}
 
+	log.Printf("Listen Control Conn [%s] \n", laddr.String())
+
 	l, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
 		fmt.Println("Error listening:", err)
@@ -192,7 +207,7 @@ func createControlConn(host, port string, controlChan chan int) {
 			panic(err)
 		}
 
-		fmt.Printf("Control Conn %v \n", conn.LocalAddr())
+		log.Printf("Control Conn %v \n", conn.LocalAddr())
 		for {
 			select {
 			case i := <-controlChan:
